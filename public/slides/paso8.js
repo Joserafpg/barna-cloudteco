@@ -11,19 +11,19 @@
   const CARDS = [
     {
       icon: 'shieldCheck', chip: 'green', h: '2FA en todo',
-      p: 'Si solo haces <b>UNA</b> cosa hoy, que sea esta. Idealmente una app de códigos, no SMS.',
+      p: 'Si haces solo <b>UNA</b> cosa hoy, que sea esta. Mejor una app de códigos que SMS.',
     },
     {
       icon: 'key', chip: '', h: 'Contraseñas largas',
-      p: 'Una frase larga como <code class="paso8-code paso8-good">PerroAzulComeArroz</code> vale más —y se recuerda mejor— que <code class="paso8-code paso8-bad">P@s5w!</code>',
+      p: 'Una frase como <code class="paso8-code paso8-good">PerroAzulComeArroz</code> vale más —y se recuerda mejor— que <code class="paso8-code paso8-bad">P@s5w!</code>',
     },
     {
-      icon: 'lock', chip: 'navy', h: 'No guardes tus claves en computadoras ajenas',
-      p: 'Ni en el navegador de un equipo que no es tuyo.',
+      icon: 'lock', chip: 'navy', h: 'Nada en equipos ajenos',
+      p: 'No guardes tus claves en el navegador de un equipo que no es tuyo.',
     },
     {
       icon: 'mail', chip: 'amber', h: 'El correo es la llave maestra',
-      p: 'Si te lo roban, roban todo lo demás. Merece tu clave más fuerte.',
+      p: 'Si te lo roban, roban todo. Ponle tu clave más fuerte.',
     },
   ];
 
@@ -54,7 +54,7 @@
     css: `
       .paso8-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
       .paso8-card {
-        position: relative; background: var(--surface);
+        position: relative; min-width: 0; background: var(--surface);
         border: 1px solid var(--line); border-radius: var(--radius);
         padding: 20px 22px; display: flex; gap: 16px; align-items: flex-start;
         box-shadow: var(--shadow-sm);
@@ -64,13 +64,13 @@
       .paso8-h {
         font-family: var(--display); font-weight: 700; font-size: 1.15rem;
         line-height: 1.2; color: var(--navy); margin-bottom: 5px;
-        padding-right: 22px;
+        padding-right: 22px; overflow-wrap: anywhere;
       }
-      .paso8-p { color: var(--muted); font-size: 0.98rem; line-height: 1.5; }
+      .paso8-p { color: var(--muted); font-size: 0.98rem; line-height: 1.5; overflow-wrap: anywhere; }
       .paso8-p b { color: var(--ink); font-weight: 700; }
       .paso8-code {
         font-family: var(--mono); font-weight: 700; font-size: 0.88em;
-        padding: 1px 6px; border-radius: 6px; white-space: nowrap;
+        padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere;
       }
       .paso8-good { color: var(--green); background: var(--green-soft); }
       .paso8-bad { color: var(--red); background: var(--red-soft); }
@@ -81,7 +81,8 @@
 
       @media (max-width: 620px) {
         .paso8-grid { grid-template-columns: 1fr; }
-        .paso8-card { padding: 16px 18px; gap: 13px; }
+        .paso8-card { padding: 16px 16px; gap: 13px; }
+        .paso8-card .icon-chip { width: 48px; height: 48px; border-radius: 14px; }
         .paso8-h { font-size: 1.05rem; }
         .paso8-p { font-size: 0.94rem; }
       }

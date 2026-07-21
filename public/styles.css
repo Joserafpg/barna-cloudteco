@@ -193,8 +193,8 @@ input.field::placeholder { color: var(--muted); }
 }
 /* HUD flotante — sin barra separada, la diapositiva se ve unida y a pantalla completa */
 .hud { position: fixed; z-index: 30; }
-.hud-logo { top: 24px; left: 30px; }
-.hud-logo img { height: 26px; }
+.hud-logo { top: 22px; left: 30px; }
+.hud-logo img { height: 32px; }
 .hud-count {
   top: 24px; right: 30px;
   display: inline-flex; align-items: center; gap: 7px;
@@ -304,7 +304,13 @@ input.field::placeholder { color: var(--muted); }
   position: fixed; top: 0; left: 0; right: 0; z-index: 40; pointer-events: none;
   padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 8px;
 }
-.stu-top img { height: 22px; }
+.stu-top img { height: 30px; }
+
+.join-count {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--muted);
+}
+.join-count .ic { color: var(--green); }
 
 /* inicio: nombres de la gente entrando, flotando hacia arriba (detrás del contenido) */
 .join-float { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
@@ -331,6 +337,12 @@ input.field::placeholder { color: var(--muted); }
   .choice { min-height: 150px; border-radius: 22px; }
   .choice .big { font-size: 2.3rem; }
   .choice .pct { font-size: 1.3rem; }
+  /* en el celular del alumno: contenido alto → arriba y con scroll (no se corta) */
+  .center-screen {
+    justify-content: flex-start; overflow-y: auto;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 58px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
+  }
 }
 @media (max-width: 560px) {
   .qr-card svg { width: 230px; height: 230px; }

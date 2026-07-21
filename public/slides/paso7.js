@@ -73,7 +73,7 @@
             </span>
           </div>
           <div class="paso7-bubble">
-            Hola, te mandé un código por error sin querer. ¿Me lo puedes reenviar? Es que es urgente.
+            Hola, te llegó un código mío por error. ¿Me lo reenvías? Es urgente.
             <span class="paso7-time">14:32</span>
           </div>
         </div>
@@ -84,11 +84,11 @@
         <div class="paso7-alerts">
           <div class="paso7-alert-title">${ctx.icon('alertTriangle', { size: 15 })} Señales de alerta</div>
           <div class="paso7-signals">
-            <span class="paso7-signal"><span class="paso7-sig-ic">${ctx.icon('clock', { size: 18 })}</span>Urgencia: te apura para que no pienses</span>
+            <span class="paso7-signal"><span class="paso7-sig-ic">${ctx.icon('clock', { size: 18 })}</span>Te mete prisa para que no pienses</span>
             <span class="paso7-signal"><span class="paso7-sig-ic">${ctx.icon('hash', { size: 18 })}</span>Te pide un código de 6 dígitos</span>
-            <span class="paso7-signal"><span class="paso7-sig-ic">${ctx.icon('user', { size: 18 })}</span>Alguien que "se equivocó" y te escribe</span>
+            <span class="paso7-signal"><span class="paso7-sig-ic">${ctx.icon('user', { size: 18 })}</span>Un desconocido que "se equivocó"</span>
           </div>
-          <div class="paso7-punch">Nadie legítimo te pide un código que te llegó a ti. <span class="hl">NUNCA lo compartas.</span></div>
+          <div class="paso7-punch">Un código que te llega es tuyo. <span class="hl">NUNCA lo compartas.</span></div>
         </div>
       </div>`;
   }
@@ -125,13 +125,13 @@
     css: `
       /* ---- burbuja de chat tipo WhatsApp (mensaje-trampa) ---- */
       .paso7-chat { display: flex; flex-direction: column; gap: 10px; align-self: flex-start; max-width: 540px; width: 100%; }
-      .paso7-chat-head { display: flex; align-items: center; gap: 10px; }
+      .paso7-chat-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
       .paso7-avatar {
         display: inline-flex; align-items: center; justify-content: center; flex: none;
         width: 38px; height: 38px; border-radius: 50%;
         background: var(--blue-soft); color: var(--muted);
       }
-      .paso7-chat-meta { display: flex; flex-direction: column; line-height: 1.2; }
+      .paso7-chat-meta { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
       .paso7-chat-name { font-family: var(--display); font-weight: 600; font-size: 0.95rem; color: var(--navy); }
       .paso7-chat-sub { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
       .paso7-bubble {
@@ -139,7 +139,7 @@
         background: var(--green-soft); color: var(--ink);
         border: 1px solid #c6ecda; border-radius: 16px 16px 16px 4px;
         padding: 13px 16px; font-size: 1.02rem; line-height: 1.5; font-weight: 500;
-        box-shadow: var(--shadow-sm);
+        overflow-wrap: anywhere; box-shadow: var(--shadow-sm);
       }
       .paso7-time { display: block; text-align: right; margin-top: 4px; font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
 
@@ -170,9 +170,12 @@
       }
 
       @media (max-width: 620px) {
-        .paso7-bubble { font-size: 0.98rem; }
-        .paso7-signal { font-size: 0.94rem; }
-        .paso7-punch { font-size: 0.94rem; }
+        .paso7-chat { max-width: 100%; }
+        .paso7-bubble { font-size: 0.96rem; padding: 12px 14px; }
+        .paso7-alerts { padding: 14px 15px; gap: 10px; }
+        .paso7-signal { font-size: 0.92rem; gap: 10px; }
+        .paso7-sig-ic { width: 30px; height: 30px; }
+        .paso7-punch { font-size: 0.92rem; padding: 11px 13px; }
       }
     `,
   };

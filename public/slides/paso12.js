@@ -12,12 +12,12 @@
 
   // ---------- A · reglas de oro (mismo componente en ambos roles) ----------
   const RULES = [
-    { icon: 'shieldCheck',   chip: 'green', t: 'Activa 2FA en todo' },
-    { icon: 'key',           chip: 'navy',  t: 'Contraseñas largas, mejor una frase' },
-    { icon: 'hash',          chip: 'navy',  t: 'Nunca compartas un código que te llega' },
-    { icon: 'eye',           chip: 'navy',  t: 'Antes de escribir tu clave, mira la URL' },
-    { icon: 'alertTriangle', chip: 'amber', t: 'Urgencia + secreto + dinero = estafa' },
-    { icon: 'user',          chip: 'navy',  t: 'Verifica por otro canal (llama, no respondas)' },
+    { icon: 'shieldCheck',   chip: 'green', t: 'Activa el 2FA' },
+    { icon: 'key',           chip: 'navy',  t: 'Clave larga: una frase' },
+    { icon: 'hash',          chip: 'navy',  t: 'Tu código no se comparte' },
+    { icon: 'eye',           chip: 'navy',  t: 'Revisa la URL antes de teclear' },
+    { icon: 'alertTriangle', chip: 'amber', t: 'Urgencia + dinero = estafa' },
+    { icon: 'user',          chip: 'navy',  t: 'Ante la duda, verifica aparte' },
   ];
 
   // ---------- C · preguntas del quiz (correct = índice de la opción buena) ----------
@@ -83,10 +83,6 @@
 
         <div class="paso12-commit" id="paso12-commit">
           ${committed ? commitDone(ctx) : commitForm(ctx)}
-        </div>
-
-        <div class="paso12-voice">
-          <span class="pill-navy">${ctx.icon('users', { size: 18 })} El quiz lo responde el salón en voz alta</span>
         </div>
 
         ${thanks(ctx)}
@@ -260,7 +256,7 @@
     css: `
       /* ---- layout general del paso ---- */
       .paso12.slide { gap: 20px; }
-      .paso12-stu.slide { justify-content: flex-start; padding-top: 34px; padding-bottom: 32px; }
+      .paso12-stu.slide { justify-content: flex-start; padding-top: 8px; padding-bottom: 24px; }
       .paso12-pres.slide { gap: 22px; }
 
       /* ---- A · tarjetas de recomendación (mismo look en ambos roles) ---- */
@@ -274,6 +270,7 @@
       .paso12-rule-txt {
         font-family: var(--display); font-weight: 600; font-size: 0.98rem;
         line-height: 1.28; color: var(--navy);
+        min-width: 0; overflow-wrap: anywhere;
       }
 
       /* ---- B · compromisos del alumno ---- */
@@ -296,7 +293,7 @@
         background: var(--blue-soft); color: var(--blue);
       }
       .paso12-commit .field.paso12-field {
-        max-width: none; text-align: left; flex: 1;
+        max-width: none; text-align: left; flex: 1; min-width: 0;
         font-size: 1rem; padding: 13px 14px;
       }
       .paso12-save { align-self: flex-start; }
@@ -309,6 +306,7 @@
         border-radius: 18px; padding: 18px 20px;
       }
       .paso12-confirm-chip { flex: none; width: 48px; height: 48px; border-radius: 14px; }
+      .paso12-confirm-body { min-width: 0; }
       .paso12-confirm-title {
         font-family: var(--display); font-weight: 700; font-size: 1.1rem;
         color: var(--green); margin-bottom: 9px;
@@ -318,11 +316,9 @@
         display: flex; align-items: flex-start; gap: 8px;
         font-family: var(--display); font-weight: 600; font-size: 0.98rem;
         line-height: 1.35; color: var(--navy);
+        min-width: 0; overflow-wrap: anywhere;
       }
       .paso12-confirm-list li .ic { color: var(--green); flex: none; margin-top: 2px; }
-
-      /* nota "responde en voz alta" (alumno) */
-      .paso12-voice { display: flex; justify-content: center; }
 
       /* ---- C · quiz (solo profe) ---- */
       .paso12-quiz {
@@ -363,6 +359,7 @@
       .paso12-opt-txt {
         font-family: var(--display); font-weight: 600; font-size: 1.05rem;
         line-height: 1.3; color: var(--navy);
+        min-width: 0; overflow-wrap: anywhere;
       }
       /* correcta = verde sólido claro */
       .paso12-opt.correct { border-color: var(--green); background: var(--green-soft); }
@@ -406,8 +403,19 @@
         .paso12-opts { grid-template-columns: 1fr 1fr; }
       }
       @media (max-width: 620px) {
+        .paso12-stu.slide { gap: 16px; }
+        /* B · compromisos cómodos y sin bordes pegados */
+        .paso12-commit { padding: 16px; border-radius: 18px; gap: 12px; }
+        .paso12-commit-head { font-size: 1.05rem; }
+        .paso12-fieldrow { gap: 10px; }
+        .paso12-commit .field.paso12-field { font-size: 1.02rem; padding: 15px 14px; }
+        /* botón Guardar grande: ocupa todo el ancho */
+        .paso12-save { align-self: stretch; width: 100%; padding: 16px 22px; }
+        .paso12-confirm { padding: 16px; }
+        /* quiz (por si el profe abre en pantalla estrecha) */
         .paso12-quiz { padding: 18px; }
         .paso12-quiz-q { font-size: 1.3rem; }
+        .paso12-opt { padding: 14px 15px; gap: 12px; }
         .paso12-finale-title { font-size: 2.2rem; }
         .paso12-finale .paso12-rules { grid-template-columns: 1fr; }
       }

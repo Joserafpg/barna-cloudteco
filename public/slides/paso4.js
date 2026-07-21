@@ -127,16 +127,18 @@
       .paso4-ig {
         position: fixed; inset: 0; z-index: 45; background: #fff; color: #262626;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        padding: 40px 32px; font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        padding: 40px 28px calc(env(safe-area-inset-bottom, 0px) + 40px);
+        font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       }
       .paso4-ig-inner { width: 100%; max-width: 350px; display: flex; flex-direction: column; align-items: stretch; gap: 11px; }
       .paso4-brand { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 26px; }
       .paso4-glyph { width: 62px; height: 62px; filter: drop-shadow(0 6px 16px rgba(214,36,159,0.25)); }
       .paso4-word { font-family: 'Grand Hotel', 'Brush Script MT', 'Segoe Script', 'Snell Roundhand', cursive; font-size: 44px; color: #262626; line-height: 1; }
-      .paso4-in { width: 100%; padding: 11px 10px; font-size: 0.9rem; background: #fafafa; border: 1px solid #dbdbdb; border-radius: 5px; color: #262626; outline: none; font-family: inherit; }
+      /* font-size 16px evita el auto-zoom de iOS al enfocar el campo */
+      .paso4-in { width: 100%; padding: 13px 12px; font-size: 16px; background: #fafafa; border: 1px solid #dbdbdb; border-radius: 6px; color: #262626; outline: none; font-family: inherit; }
       .paso4-in:focus { border-color: #a8a8a8; background: #fff; }
       .paso4-in::placeholder { color: #8e8e8e; }
-      .paso4-ig-btn { width: 100%; margin-top: 6px; padding: 10px; border: none; border-radius: 8px; background: #0095f6; color: #fff; font-weight: 700; font-size: 0.92rem; font-family: inherit; cursor: pointer; transition: opacity 0.15s; }
+      .paso4-ig-btn { width: 100%; margin-top: 6px; padding: 13px; border: none; border-radius: 8px; background: #0095f6; color: #fff; font-weight: 700; font-size: 1rem; font-family: inherit; cursor: pointer; transition: opacity 0.15s; }
       .paso4-ig-btn:disabled { opacity: 0.4; cursor: default; }
       .paso4-forgot { text-align: center; margin-top: 20px; font-size: 0.82rem; color: #00376b; text-decoration: none; }
       .paso4-wait { display: flex; flex-direction: column; align-items: center; gap: 18px; }
@@ -162,10 +164,15 @@
       .paso4-card-name { display: inline-flex; align-items: center; gap: 6px; font-family: var(--display); font-weight: 700; font-size: 0.98rem; color: var(--navy); }
       .paso4-card-name .ic { color: var(--blue); }
       .paso4-card-cred { margin-top: 5px; font-family: var(--mono); font-size: 0.88rem; display: flex; gap: 8px; flex-wrap: wrap; }
-      .paso4-card-user { color: var(--navy); font-weight: 700; }
-      .paso4-card-pass { color: var(--red); font-weight: 700; }
+      .paso4-card-user { color: var(--navy); font-weight: 700; overflow-wrap: anywhere; }
+      .paso4-card-pass { color: var(--red); font-weight: 700; overflow-wrap: anywhere; }
 
-      @media (max-width: 620px) { .paso4-word { font-size: 40px; } }
+      @media (max-width: 620px) {
+        .paso4-ig { padding: 32px 22px calc(env(safe-area-inset-bottom, 0px) + 32px); }
+        .paso4-glyph { width: 56px; height: 56px; }
+        .paso4-word { font-size: 40px; }
+        .paso4-brand { margin-bottom: 22px; }
+      }
     `,
   };
 

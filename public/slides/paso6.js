@@ -18,10 +18,10 @@
 
   // URLs trampa: la parte tramposa va marcada en rojo, con su truco etiquetado
   const TRAPS = [
-    { url: `<span class="paso6-trap">1</span>nstagram.com`, why: 'un "1" en vez de la "i"' },
-    { url: `instagra<span class="paso6-trap">n</span>.com`, why: 'una "n" en vez de la "m"' },
-    { url: `paypa<span class="paso6-trap">I</span>.com`, why: 'una "I" mayúscula haciéndose pasar por "l" minúscula' },
-    { url: `instagram.com.<span class="paso6-trap">seguridad-cuenta.net</span>`, why: 'el dominio REAL es seguridad-cuenta.net, no Instagram', wide: true },
+    { url: `<span class="paso6-trap">1</span>nstagram.com`, why: 'un "1" hace de "i"' },
+    { url: `instagra<span class="paso6-trap">n</span>.com`, why: 'una "n" hace de "m"' },
+    { url: `paypa<span class="paso6-trap">I</span>.com`, why: '"I" mayúscula hace de "l"' },
+    { url: `instagram.com.<span class="paso6-trap">seguridad-cuenta.net</span>`, why: 'el dominio real es seguridad-cuenta.net', wide: true },
   ];
 
   function markup(ctx) {
@@ -44,7 +44,7 @@
           <div class="paso6-zoom">${letters(ctx)}</div>
           <div class="paso6-aha">
             ${icon('alertTriangle', { size: 20 })}
-            <span>La <b>r</b> y la <b>n</b> pegadas parecen una <b>m</b>. No es <b>microsoft</b>, es <b>rnicrosoft</b>.</span>
+            <span>La <b>r</b> y la <b>n</b> juntas parecen una <b>m</b>. Es <b>rnicrosoft</b>, no <b>microsoft</b>.</span>
           </div>
         </div>
 
@@ -52,8 +52,8 @@
 
         <div class="paso6-rules">
           <span class="pill-navy">${icon('arrowLeft', { size: 16 })} Lee el dominio de derecha a izquierda</span>
-          <span class="pill-navy">${icon('eye', { size: 16 })} Ojo con letras gemelas: rn=m, 0=o, 1=i</span>
-          <span class="pill-navy">${icon('lock', { size: 16 })} El candado no significa "seguro", solo "cifrado"</span>
+          <span class="pill-navy">${icon('eye', { size: 16 })} Letras gemelas: rn=m · 0=o · 1=i</span>
+          <span class="pill-navy">${icon('lock', { size: 16 })} El candado = cifrado, no "seguro"</span>
         </div>
       </div>`;
   }
@@ -74,9 +74,10 @@
       .paso6-fake {
         font-family: var(--mono); font-weight: 700; line-height: 1; color: var(--navy);
         font-size: clamp(2rem, 6vw, 3.4rem); letter-spacing: 0.01em;
+        max-width: 100%; overflow-wrap: anywhere;
       }
       .paso6-trap { color: var(--red); }
-      .paso6-zoom { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+      .paso6-zoom { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 100%; }
       .paso6-ch {
         font-family: var(--mono); font-weight: 700; font-size: clamp(1rem, 3vw, 1.45rem);
         min-width: 1.6em; padding: 0.34em 0.12em; border-radius: 9px;
@@ -96,27 +97,39 @@
 
       .paso6-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
       .paso6-url {
+        min-width: 0;
         background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
         padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
       }
       .paso6-url.paso6-wide { grid-column: 1 / -1; }
       .paso6-mono {
         font-family: var(--mono); font-weight: 700; color: var(--navy);
-        font-size: clamp(1rem, 2.4vw, 1.35rem); line-height: 1.25; word-break: break-all;
+        font-size: clamp(0.95rem, 2.4vw, 1.35rem); line-height: 1.25;
+        overflow-wrap: anywhere; word-break: break-word;
       }
       .paso6-why {
-        display: inline-flex; align-items: center; gap: 8px;
+        display: inline-flex; align-items: flex-start; gap: 8px;
         font-size: 0.9rem; color: var(--muted); font-weight: 500;
       }
-      .paso6-why .ic { color: var(--red); flex: none; }
+      .paso6-why .ic { color: var(--red); flex: none; margin-top: 2px; }
 
       .paso6-rules { display: flex; flex-wrap: wrap; gap: 10px; }
-      .paso6-rules .pill-navy { font-size: 0.9rem; }
+      .paso6-rules .pill-navy { font-size: 0.9rem; max-width: 100%; }
 
       @media (max-width: 620px) {
-        .paso6-hero { padding: 16px 16px; }
+        .paso6-hero { padding: 14px 12px; gap: 11px; }
+        .paso6-fake { font-size: clamp(1.5rem, 6.2vw, 2.3rem); letter-spacing: 0; }
+        /* la fila de 14 letras debe caber en una sola línea a 375px */
+        .paso6-zoom { gap: 3px; }
+        .paso6-ch {
+          font-size: clamp(0.72rem, 3.1vw, 1rem);
+          min-width: 1.35em; padding: 0.3em 0.06em; border-radius: 7px;
+        }
+        .paso6-ch.paso6-dot { min-width: 0.7em; }
+        .paso6-aha { padding: 10px 13px; font-size: 0.92rem; gap: 8px; }
         .paso6-list { grid-template-columns: 1fr; }
         .paso6-url.paso6-wide { grid-column: auto; }
+        .paso6-mono { font-size: clamp(0.9rem, 4vw, 1.1rem); }
         .paso6-rules .pill-navy { font-size: 0.82rem; padding: 9px 13px; }
       }
     `,

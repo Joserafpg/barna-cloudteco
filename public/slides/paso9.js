@@ -56,16 +56,23 @@
   function isStrong(s) { return s >= YEAR; }
 
   function cancelAnim() { if (animId) { cancelAnimationFrame(animId); animId = null; } }
-  function cancelPres() { if (presId) { cancelAnimationFrame(presId); presId = null; } }
+  let presTimer = null;
+  let decryptId = null;
+  function cancelDecrypt() { if (decryptId) { cancelAnimationFrame(decryptId); decryptId = null; } }
+  function cancelPres() {
+    if (presId) { cancelAnimationFrame(presId); presId = null; }
+    if (presTimer) { clearTimeout(presTimer); presTimer = null; }
+    cancelDecrypt();
+  }
 
   // ---------- animaciones del contador (el hacker probando) ----------
 
-  // caso descifrable: el contador cuenta 0000 -> valor y "llega"
-  function animLand(counter, status, pw, ctx) {
+  // caso numérico: el contador cuenta 0 -> TU número exacto y "aterriza"
+  function animLand(counter, status, pw, secs, ctx) {
     cancelAnim();
     const target = parseInt(pw, 10);
     const len = pw.length;
-    const dur = 350 + Math.random() * 520; // 0.35 – 0.87 s
+    const dur = 450 + Math.random() * 650; // 0.45 – 1.1 s
     const t0 = performance.now();
     const frame = (now) => {
       const t = Math.min(1, (now - t0) / dur);
@@ -77,9 +84,9 @@
       } else {
         counter.textContent = String(target).padStart(len, '0');
         counter.dataset.state = 'cracked';
-        const took = ((now - t0) / 1000).toFixed(1);
+        const ht = humanTime(secs);
         status.className = 'paso9-status cracked';
-        status.innerHTML = `${ctx.icon('lockOpen', { size: 16 })} <b>¡DESCIFRADA!</b> La adivinó en ${took} s`;
+        status.innerHTML = `${ctx.icon('lockOpen', { size: 16 })} <b>¡DESCIFRADA!</b> ${ht === 'instantáneo' ? 'Al instante.' : 'En ' + ht + '.'}`;
         if (navigator.vibrate) navigator.vibrate([40, 30, 80]);
         animId = null;
       }
@@ -128,21 +135,22 @@
     stage.hidden = false;
     stage.innerHTML = `
       <div class="paso9-counter" data-state="run">0</div>
-      <div class="paso9-status">${ctx.icon('scan', { size: 15 })} El hacker está probando combinaciones…</div>
+      <div class="paso9-status">${ctx.icon('scan', { size: 15 })} Probando combinaciones…</div>
       <div class="paso9-verdict ${strong ? 'strong' : 'weak'}">
         <span class="paso9-tag ${strong ? 'strong' : 'weak'}">${ctx.icon(strong ? 'shieldCheck' : 'shieldAlert', { size: 16 })} ${strong ? 'FUERTE' : 'DÉBIL'}</span>
         <span class="paso9-vbody">
           <span class="paso9-vlabel">Un ordenador la rompería en</span>
           <span class="paso9-time">${time}</span>
           <span class="paso9-vsub">${strong
-            ? 'Ni con miles de máquinas a la vez. Así se ve una buena clave.'
-            : 'Súmale mayúsculas, números y símbolos y mira dispararse el tiempo.'}</span>
+            ? 'Así se ve una buena clave.'
+            : 'Añade mayúsculas, números y símbolos.'}</span>
         </span>
       </div>`;
     const counter = stage.querySelector('.paso9-counter');
     const status = stage.querySelector('.paso9-status');
     const numeric = /^[0-9]+$/.test(pw);
-    if (numeric && pw.length <= 6) animLand(counter, status, pw, ctx);
+    // solo números (y que quepa en pantalla) → cuenta hasta TU número exacto
+    if (numeric && pw.length <= 12) animLand(counter, status, pw, secs, ctx);
     else animSpin(counter, status, pw.length, strong, secs, ctx);
   }
 
@@ -153,7 +161,6 @@
       <div class="slide">
         <div class="kicker">${ctx.icon('zap', { size: 14 })} Laboratorio</div>
         <h2 class="q">¿Cuánto aguanta <span class="hl">tu contraseña</span>?</h2>
-        <div class="pill-navy paso9-privacy">${ctx.icon('lock', { size: 15 })} Nada de lo que escribas sale de tu teléfono</div>
         <div class="paso9-lab">
           <input class="field paso9-input" id="p9pw" type="text" maxlength="40"
                  placeholder="Escribe una contraseña" autocomplete="off"
@@ -161,6 +168,7 @@
           <button class="btn paso9-go" id="p9go">${ctx.icon('zap', { size: 20 })} Comprobar</button>
         </div>
         <div class="paso9-stage" id="p9stage" hidden></div>
+        <div class="paso9-privacy">${ctx.icon('lock', { size: 13 })} Nada de esto sale de tu teléfono</div>
       </div>`;
     const input = container.querySelector('#p9pw');
     const stage = container.querySelector('#p9stage');
@@ -178,71 +186,130 @@
     { pw: '1234', label: 'instantáneo', tier: 'weak' },
     { pw: 'carlos', label: 'segundos', tier: 'weak' },
     { pw: 'Carlos2024', label: 'semanas', tier: 'mid' },
-    { pw: 'PerroAzulComeArroz', label: 'millones de años', tier: 'strong' },
+    { pw: 'PerroAzulComeArroz', label: 'MATH ERROR', tier: 'strong' },
   ];
 
-  function presLoop(el) {
-    cancelPres();
-    let last = 0, n = 0;
-    const frame = (now) => {
-      if (!el.isConnected) { presId = null; return; } // se auto-detiene al salir del paso
-      if (now - last > 45) {
-        n += Math.floor(80 + Math.random() * 1900);
-        el.textContent = String(n % 1000000).padStart(6, '0');
-        last = now;
+  // efecto "desencriptando": el texto se revuelve y se resuelve al password real
+  function decrypt(el, finalText, durMs, done) {
+    cancelDecrypt();
+    const glyphs = '!<>-_\\/[]{}=+*^?#0123456789ABCDEF@%$&';
+    const total = finalText.length;
+    const t0 = performance.now();
+    const tick = (now) => {
+      if (!el.isConnected) { decryptId = null; return; }
+      const p = Math.min(1, (now - t0) / durMs);
+      const locked = Math.floor(p * total);
+      let s = '';
+      for (let k = 0; k < total; k++) {
+        const ch = finalText[k];
+        s += (k < locked || ch === ' ') ? ch : glyphs[(Math.random() * glyphs.length) | 0];
       }
-      presId = requestAnimationFrame(frame);
+      el.textContent = s;
+      if (p < 1) decryptId = requestAnimationFrame(tick);
+      else { el.textContent = finalText; decryptId = null; if (done) done(); }
     };
-    presId = requestAnimationFrame(frame);
+    decryptId = requestAnimationFrame(tick);
+  }
+
+  // las claves flotan; de la nada se agarra una → al centro-izquierda,
+  // y a la derecha se desencripta hasta revelar su tiempo de crackeo
+  function presDemo(root) {
+    cancelPres();
+    const chips = [...root.querySelectorAll('.paso9-chip')];
+    const pool = root.querySelector('#p9pool');
+    const focus = root.querySelector('#p9focus');
+    const tgt = root.querySelector('#p9tgt');
+    const out = root.querySelector('#p9out');
+    const timeEl = root.querySelector('#p9time');
+    if (!chips.length || !pool || !focus || !tgt || !out || !timeEl) return;
+    let i = -1;
+    const grab = () => {
+      if (!root.isConnected) { presTimer = null; return; }
+      cancelDecrypt();
+      let n; do { n = Math.floor(Math.random() * chips.length); } while (chips.length > 1 && n === i);
+      i = n;
+      const chip = chips[i];
+      const pw = chip.dataset.pw;
+      const tier = chip.dataset.tier;
+      const durMs = tier === 'strong' ? 1800 : tier === 'mid' ? 1300 : 850;
+      chips.forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      tgt.textContent = pw;
+      timeEl.textContent = '';
+      timeEl.className = 'paso9-crack-time';
+      pool.classList.add('dim');
+      focus.classList.add('on');
+      decrypt(out, pw, durMs, () => {
+        timeEl.textContent = chip.dataset.time;
+        timeEl.className = 'paso9-crack-time ' + tier;
+      });
+      presTimer = setTimeout(release, 2700);
+    };
+    const release = () => {
+      if (!root.isConnected) { presTimer = null; return; }
+      focus.classList.remove('on');
+      pool.classList.remove('dim');
+      chips.forEach((c) => c.classList.remove('active'));
+      presTimer = setTimeout(grab, 1500);
+    };
+    presTimer = setTimeout(grab, 250); // deferir: la diapositiva aún no está en el DOM
   }
 
   function presenter(container, ctx) {
     cancelPres();
-    const rows = TABLE.map((r) => `
-      <div class="paso9-row">
-        <code class="paso9-pw">${ctx.escapeHtml(r.pw)}</code>
-        <span class="paso9-arrow">${ctx.icon('arrowRight', { size: 18 })}</span>
-        <span class="paso9-label ${r.tier}">${r.label}</span>
-      </div>`).join('');
+    const { icon, escapeHtml } = ctx;
+    const chips = TABLE.map((r) => `
+      <span class="paso9-chip ${r.tier}" data-tier="${r.tier}" data-pw="${escapeHtml(r.pw)}" data-time="${r.label}">${escapeHtml(r.pw)}</span>`).join('');
     container.innerHTML = `
       <div class="slide">
-        <div class="kicker">${ctx.icon('zap', { size: 14 })} Laboratorio</div>
+        <div class="kicker">${icon('zap', { size: 14 })} Laboratorio</div>
         <h2 class="q">Así rompe un hacker tu clave: <span class="hl">prueba todo</span> hasta acertar.</h2>
-        <div class="paso9-pres">
-          <div class="paso9-demo">
-            <div class="paso9-demo-label">${ctx.icon('scan', { size: 16 })} Probando combinaciones…</div>
-            <div class="paso9-counter big" data-state="run" id="p9demo">000000</div>
+        <div class="paso9-arena">
+          <div class="paso9-pool" id="p9pool">${chips}</div>
+          <div class="paso9-focus" id="p9focus">
+            <div class="paso9-focus-l">
+              <span class="paso9-clab">${icon('target', { size: 13 })} Objetivo</span>
+              <code class="paso9-target" id="p9tgt"></code>
+            </div>
+            <span class="paso9-focus-arrow">${icon('arrowRight', { size: 24 })}</span>
+            <div class="paso9-focus-r">
+              <span class="paso9-clab">${icon('scan', { size: 13 })} Desencriptando…</span>
+              <code class="paso9-out" id="p9out"></code>
+              <span class="paso9-crack-time" id="p9time"></span>
+            </div>
           </div>
-          <div class="paso9-table">${rows}</div>
         </div>
-        <p class="paso9-note big">${ctx.icon('key', { size: 16 })} Cada letra o símbolo que agregas <b>multiplica</b> las combinaciones. No es magia, es matemática.</p>
+        <p class="paso9-note big">${icon('key', { size: 16 })} Cada carácter que añades <b>multiplica</b> las combinaciones. Es matemática, no magia.</p>
       </div>`;
-    presLoop(container.querySelector('#p9demo'));
+    presDemo(container);
   }
 
   // ---------- CSS del módulo (prefijo paso9-) ----------
   const css = `
-    .paso9-privacy { align-self: flex-start; font-size: 0.9rem; }
+    .paso9-privacy {
+      display: inline-flex; align-items: center; gap: 6px; align-self: center;
+      margin-top: 8px; font-size: 0.8rem; color: var(--muted);
+    }
+    .paso9-privacy .ic { color: var(--muted); }
 
     .paso9-lab { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; margin-top: 2px; }
-    .paso9-input { flex: 1; min-width: 220px; max-width: none; text-align: left; }
+    .paso9-input { flex: 1; min-width: 180px; max-width: none; text-align: left; }
     .paso9-go { white-space: nowrap; }
 
     .paso9-stage { display: flex; flex-direction: column; gap: 16px; margin-top: 6px; }
 
     .paso9-counter {
       font-family: var(--mono); font-weight: 700;
-      font-size: clamp(2.6rem, 13vw, 4.2rem); line-height: 1;
+      font-size: clamp(1.9rem, 10vw, 4.4rem); line-height: 1;
       letter-spacing: 2px; font-variant-numeric: tabular-nums;
-      color: var(--navy); background: var(--surface-2);
-      border: 1px solid var(--line); border-radius: 16px;
-      padding: 18px 20px; text-align: center;
-      transition: color 0.25s, background 0.25s, border-color 0.25s;
+      color: var(--navy); text-align: center; white-space: nowrap;
+      max-width: 100%; overflow: hidden; padding: 6px 0;
+      transition: color 0.25s;
     }
-    .paso9-counter.big { font-size: clamp(3.4rem, 9vw, 6rem); letter-spacing: 4px; }
+    .paso9-counter.big { font-size: clamp(3rem, 9vw, 6rem); letter-spacing: 5px; }
     .paso9-counter[data-state="cracked"],
-    .paso9-counter[data-state="weak"] { color: var(--red); border-color: var(--red); background: var(--red-soft); }
-    .paso9-counter[data-state="stuck"] { color: var(--green); border-color: var(--green); background: var(--green-soft); }
+    .paso9-counter[data-state="weak"] { color: var(--red); }
+    .paso9-counter[data-state="stuck"] { color: var(--green); }
 
     .paso9-status {
       font-family: var(--display); font-weight: 600; color: var(--muted);
@@ -254,11 +321,11 @@
 
     .paso9-verdict {
       display: flex; align-items: center; gap: 18px;
-      border: 2px solid var(--line); border-radius: 20px;
-      padding: 18px 20px; background: var(--surface);
+      border-radius: 20px; padding: 18px 22px;
+      background: var(--surface); box-shadow: var(--shadow-sm);
     }
-    .paso9-verdict.weak { border-color: var(--red); background: var(--red-soft); }
-    .paso9-verdict.strong { border-color: var(--green); background: var(--green-soft); }
+    .paso9-verdict.weak { background: var(--red-soft); }
+    .paso9-verdict.strong { background: var(--green-soft); }
     .paso9-tag {
       display: inline-flex; align-items: center; gap: 7px; flex: none;
       font-family: var(--display); font-weight: 700; font-size: 1rem;
@@ -275,26 +342,49 @@
     .paso9-time { font-family: var(--display); font-weight: 700; font-size: 1.7rem; line-height: 1.1; color: var(--navy); }
     .paso9-vsub { color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
 
-    .paso9-pres { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; margin-top: 6px; }
-    .paso9-demo { display: flex; flex-direction: column; gap: 12px; }
-    .paso9-demo-label { font-family: var(--display); font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 8px; }
-    .paso9-demo-label .ic { color: var(--blue); }
+    /* arena: pool de claves flotando + foco de captura */
+    .paso9-arena { position: relative; min-height: 210px; margin: 10px 0; }
+    .paso9-pool { position: absolute; inset: 0; transition: opacity .4s, filter .4s; }
+    .paso9-pool.dim { opacity: 0.16; filter: blur(1px); }
+    .paso9-chip {
+      position: absolute; font-family: var(--mono); font-weight: 700; font-size: 1.05rem;
+      color: var(--navy); background: var(--surface); box-shadow: var(--shadow-sm);
+      border-radius: 999px; padding: 9px 18px; white-space: nowrap;
+    }
+    .paso9-chip:nth-child(1) { left: 4%;  top: 14%; animation: paso9Drift 6s ease-in-out infinite; }
+    .paso9-chip:nth-child(2) { left: 42%; top: 64%; animation: paso9Drift 7.5s ease-in-out -2s infinite; }
+    .paso9-chip:nth-child(3) { left: 64%; top: 10%; animation: paso9Drift 6.8s ease-in-out -1s infinite; }
+    .paso9-chip:nth-child(4) { left: 28%; top: 34%; animation: paso9Drift 8s ease-in-out -3s infinite; }
+    @keyframes paso9Drift {
+      0%,100% { transform: translate(0,0); }
+      25% { transform: translate(20px,-16px); }
+      50% { transform: translate(-16px,14px); }
+      75% { transform: translate(12px,18px); }
+    }
 
-    .paso9-table { display: flex; flex-direction: column; gap: 12px; }
-    .paso9-row {
-      display: flex; align-items: center; gap: 14px;
-      background: var(--surface); border: 1px solid var(--line);
-      border-radius: 14px; padding: 12px 16px;
+    /* foco: objetivo (centro-izq) → desencriptando (der) */
+    .paso9-focus {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start;
+      gap: 22px; padding: 0 6% 0 2%; opacity: 0; pointer-events: none; transition: opacity .45s;
     }
-    .paso9-pw { font-family: var(--mono); font-weight: 700; font-size: 1.1rem; color: var(--navy); }
-    .paso9-arrow { color: var(--muted); display: inline-flex; }
-    .paso9-label {
-      margin-left: auto; font-family: var(--display); font-weight: 700;
-      font-size: 1rem; padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+    .paso9-focus.on { opacity: 1; }
+    .paso9-focus-l, .paso9-focus-r { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .paso9-focus-l { flex: 0 1 auto; max-width: 44%; }
+    .paso9-focus-r { flex: 1; min-width: 0; }
+    .paso9-clab { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+    .paso9-clab .ic { color: var(--blue); }
+    .paso9-target, .paso9-out { font-family: var(--mono); font-weight: 700; font-size: 1.7rem; line-height: 1.15; overflow-wrap: anywhere; }
+    .paso9-target { color: var(--navy); }
+    .paso9-out { color: var(--blue-2); }
+    .paso9-focus-arrow { color: var(--line-2); flex: none; align-self: center; }
+    .paso9-crack-time {
+      align-self: flex-start; margin-top: 2px; font-family: var(--display); font-weight: 700; font-size: 0.95rem;
+      padding: 6px 14px; border-radius: 999px; white-space: nowrap; color: transparent;
+      transition: background .3s;
     }
-    .paso9-label.weak { color: var(--red); background: var(--red-soft); }
-    .paso9-label.mid { color: var(--amber); background: var(--amber-soft); }
-    .paso9-label.strong { color: var(--green); background: var(--green-soft); }
+    .paso9-crack-time.weak { color: #fff; background: var(--red); }
+    .paso9-crack-time.mid { color: #fff; background: var(--amber); }
+    .paso9-crack-time.strong { color: #fff; background: var(--green); }
 
     .paso9-note { color: var(--muted); font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 8px; }
     .paso9-note.big { font-size: 1.05rem; margin-top: 4px; }
@@ -302,11 +392,19 @@
     .paso9-note .ic { color: var(--blue); flex: none; }
 
     @media (max-width: 620px) {
-      .paso9-pres { grid-template-columns: 1fr; gap: 16px; }
-      .paso9-verdict { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .paso9-lab { flex-direction: column; gap: 10px; }
+      .paso9-go { width: 100%; }
+      .paso9-counter { letter-spacing: 1px; padding: 4px 0; }
+      .paso9-verdict { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; }
+      .paso9-tag { font-size: 0.92rem; padding: 7px 12px; }
       .paso9-time { font-size: 1.4rem; }
-      .paso9-pw { font-size: 0.95rem; }
-      .paso9-label { font-size: 0.85rem; }
+      .paso9-arena { min-height: 250px; }
+      .paso9-chip { font-size: 0.84rem; padding: 8px 13px; }
+      .paso9-focus { flex-direction: column; align-items: flex-start; justify-content: center; gap: 14px; padding: 0 10px; }
+      .paso9-focus-l { max-width: 100%; }
+      .paso9-focus-arrow { display: none; }
+      .paso9-target, .paso9-out { font-size: 1.25rem; }
+      .paso9-note.big { font-size: 0.98rem; }
     }
   `;
 
