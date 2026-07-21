@@ -1,0 +1,339 @@
+/* ===========================================================
+   Barna · Ciberseguridad — tema claro (blanco + navy Barna)
+   Limpio, moderno, "young". Iconos SVG (sin emojis).
+   =========================================================== */
+:root {
+  --navy: #14284d;          /* azul Barna (primario) */
+  --navy-2: #0e1d3a;
+  --blue: #2f5bd8;          /* acento vivo / botones */
+  --blue-2: #1d4ed8;
+  --blue-soft: #e9eefb;
+  --hl: #c6d2f0;            /* resaltador periwinkle (estilo Barna) */
+  --bg: #f3f4f7;           /* off-white cálido como sus posts */
+  --surface: #ffffff;      /* tarjetas */
+  --surface-2: #f9fbff;
+  --ink: #0f1e38;          /* texto principal */
+  --muted: #66799b;        /* texto secundario */
+  --line: #e4ebf6;
+  --line-2: #d3ddee;
+  --red: #e5484d;
+  --red-soft: #fdecec;
+  --green: #12885c;
+  --green-soft: #e5f6ee;
+  --amber: #c77700;
+  --amber-soft: #fdf1dd;
+  --purple: #6b4dff;
+  --radius: 20px;
+  --shadow-sm: 0 2px 10px rgba(15, 30, 56, 0.06);
+  --shadow: 0 12px 34px rgba(15, 30, 56, 0.1);
+  --shadow-lg: 0 24px 60px rgba(15, 30, 56, 0.16);
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --body: 'Inter', system-ui, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* fondo blanco con toques suaves de azul Barna */
+/* fondo limpio, sin rejilla — solo un halo muy sutil */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(1100px 640px at 50% -18%, rgba(47, 91, 216, 0.04), transparent 62%);
+}
+
+#app { position: relative; z-index: 1; min-height: 100dvh; display: flex; flex-direction: column; }
+
+/* ---------- iconos ---------- */
+.ic { display: inline-block; vertical-align: middle; flex: none; }
+.icon-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px; border-radius: 16px;
+  background: var(--blue-soft); color: var(--blue);
+}
+.icon-chip.navy { background: rgba(0, 43, 92, 0.08); color: var(--navy); }
+.icon-chip.red { background: var(--red-soft); color: var(--red); }
+.icon-chip.green { background: var(--green-soft); color: var(--green); }
+.icon-chip.amber { background: var(--amber-soft); color: var(--amber); }
+
+/* ---------- utilidades ---------- */
+.logo-top { height: 28px; display: block; }
+/* el logo de Barna es blanco: sobre fondo claro lo pintamos navy con un filtro */
+.logo-navy { filter: brightness(0) saturate(100%) invert(11%) sepia(52%) saturate(2409%) hue-rotate(197deg) brightness(96%) contrast(101%); }
+.center-screen {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px; text-align: center; gap: 16px;
+}
+.kicker {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--blue); font-weight: 700;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+/* resaltador estilo Barna (palabra marcada en periwinkle) */
+.hl {
+  background: var(--hl); border-radius: 5px; padding: 0 7px;
+  box-decoration-break: clone; -webkit-box-decoration-break: clone; color: var(--navy);
+}
+.hl.italic { font-style: italic; }
+/* píldora navy con icono (info cards estilo Barna) */
+.pill-navy {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: var(--navy); color: #fff; border-radius: 14px;
+  padding: 11px 17px; font-weight: 600; font-size: 0.95rem;
+}
+.pill-navy .ic { color: #9fb3e6; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+  font-family: var(--display); font-weight: 700; font-size: 1rem;
+  border: none; border-radius: 999px; padding: 15px 28px; cursor: pointer;
+  background: var(--blue); color: #fff; transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+}
+.btn:hover { box-shadow: 0 14px 30px rgba(37, 99, 235, 0.34); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+.btn.ghost { background: transparent; color: var(--navy); border: 1px solid var(--line-2); box-shadow: none; }
+.btn.navy { background: var(--navy); box-shadow: 0 10px 24px rgba(0, 43, 92, 0.28); }
+.btn.danger { background: var(--red); box-shadow: 0 10px 24px rgba(229, 72, 77, 0.28); }
+
+input.field {
+  width: 100%; max-width: 360px; text-align: center;
+  padding: 16px 18px; border-radius: 14px;
+  border: 1px solid var(--line-2); background: var(--surface);
+  color: var(--ink); font-size: 1.1rem; font-family: var(--display);
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+input.field:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); }
+input.field::placeholder { color: var(--muted); }
+
+/* ===========================================================
+   PASO 0 — Ingreso del alumno
+   =========================================================== */
+.join h1 { font-family: var(--display); font-size: 1.9rem; line-height: 1.15; color: var(--navy); }
+.join p.sub { color: var(--muted); max-width: 320px; font-size: 0.95rem; line-height: 1.5; }
+
+/* ---------- el susto: alerta de seguridad (blanco + rojo) ---------- */
+.hack {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  background:
+    radial-gradient(600px 400px at 50% 30%, rgba(229, 72, 77, 0.12), transparent 70%),
+    #fff;
+}
+.hack-card {
+  width: 100%; max-width: 380px; background: var(--surface);
+  border: 2px solid var(--red); border-radius: 22px; padding: 26px 24px;
+  box-shadow: 0 24px 60px rgba(229, 72, 77, 0.28); text-align: center;
+}
+.hack-card.shake { animation: shake 0.3s infinite; }
+@keyframes shake {
+  0%,100% { transform: translate(0,0); }
+  25% { transform: translate(-3px, 2px); }
+  50% { transform: translate(3px, -2px); }
+  75% { transform: translate(-2px, -2px); }
+}
+.hack-card .big-alert { color: var(--red); animation: flick 0.5s steps(2) infinite; }
+@keyframes flick { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+.hack-card .warn {
+  color: var(--red); font-family: var(--display); font-weight: 700;
+  font-size: 1.5rem; margin: 10px 0 4px; line-height: 1.15;
+}
+.hack-card .term {
+  font-family: var(--mono); font-size: 0.78rem; line-height: 1.7; text-align: left;
+  color: var(--ink); background: var(--red-soft); border-radius: 12px;
+  padding: 12px 14px; margin-top: 14px; min-height: 130px;
+}
+.hack-card .term .ok { color: var(--green); }
+.hack-card .term .bad { color: var(--red); font-weight: 700; }
+.hack-card .bar { height: 8px; border-radius: 6px; background: #f0d9da; overflow: hidden; margin-top: 12px; }
+.hack-card .bar > i { display: block; height: 100%; width: 0; background: var(--red); }
+
+/* revelación "era broma" */
+.gotcha {
+  position: fixed; inset: 0; z-index: 60; display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 30px; text-align: center; gap: 14px; background: var(--bg);
+}
+.gotcha.show { display: flex; animation: pop 0.5s ease; }
+@keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.gotcha h2 { font-family: var(--display); font-size: 1.9rem; color: var(--navy); }
+.gotcha p { color: var(--muted); max-width: 300px; line-height: 1.55; }
+
+/* pantalla de espera del alumno */
+.wait { gap: 14px; }
+.wait .pulse-dot {
+  width: 14px; height: 14px; border-radius: 50%; background: var(--blue);
+  box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); animation: pulse 1.6s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.45); }
+  70% { box-shadow: 0 0 0 20px rgba(37,99,235,0); }
+  100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+}
+.wait h2 { font-family: var(--display); font-size: 1.4rem; color: var(--navy); }
+.wait p { color: var(--muted); }
+
+/* ===========================================================
+   PRESENTADOR
+   =========================================================== */
+.pres { position: relative; flex: 1; display: flex; flex-direction: column; min-height: 100dvh; }
+.pres-stage {
+  flex: 1; min-height: 100dvh;
+  padding: 60px 56px 112px; display: flex; flex-direction: column;
+}
+/* HUD flotante — sin barra separada, la diapositiva se ve unida y a pantalla completa */
+.hud { position: fixed; z-index: 30; }
+.hud-logo { top: 24px; left: 30px; }
+.hud-logo img { height: 26px; }
+.hud-count {
+  top: 24px; right: 30px;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--mono); font-size: 0.82rem; color: var(--navy); font-weight: 700;
+  background: rgba(255, 255, 255, 0.7); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 13px;
+}
+.hud-count .ic { color: var(--green); }
+.hud-ctrl {
+  bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.86); backdrop-filter: blur(12px);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px; box-shadow: var(--shadow);
+}
+.hud-ctrl .step {
+  font-family: var(--display); font-weight: 600; font-size: 0.85rem; color: var(--navy);
+  padding: 0 12px; white-space: nowrap;
+}
+.hud-ctrl button {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--display); font-weight: 700; font-size: 0.9rem;
+  border: none; background: transparent; color: var(--navy);
+  border-radius: 999px; padding: 9px 15px; cursor: pointer;
+}
+.hud-ctrl button.round { width: 40px; height: 40px; padding: 0; justify-content: center; background: var(--bg); }
+.hud-ctrl button.primary { background: var(--navy); color: #fff; padding: 9px 18px; }
+.hud-ctrl button:active { transform: scale(0.95); }
+.hud-ctrl .sep { width: 1px; height: 24px; background: var(--line); margin: 0 3px; }
+
+/* QR de ingreso */
+.qr-wrap { display: flex; gap: 48px; align-items: center; justify-content: center; flex: 1; flex-wrap: wrap; }
+.qr-card {
+  background: #fff; padding: 18px; border-radius: 26px;
+  border: 1px solid var(--line); box-shadow: 0 20px 48px rgba(20, 40, 77, 0.09);
+}
+.qr-card svg { width: 280px; height: 280px; display: block; }
+.qr-side { max-width: 440px; }
+.qr-side .kicker { margin-bottom: 16px; }
+.qr-side h1 {
+  font-family: var(--display); font-weight: 500; font-size: 2.6rem;
+  line-height: 1.12; letter-spacing: -0.01em; margin-bottom: 10px; color: var(--navy);
+}
+.qr-side h1 .hl { font-weight: 700; }
+.qr-side .lead { color: var(--muted); font-size: 1rem; line-height: 1.55; max-width: 350px; margin-bottom: 22px; }
+.qr-col { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.qr-col .url {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); color: var(--blue); font-size: 1rem;
+  background: var(--blue-soft); padding: 8px 14px; border-radius: 10px;
+}
+.roster { display: flex; flex-wrap: wrap; gap: 10px 20px; }
+.roster .name-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--navy);
+  animation: floatUp 0.5s ease both;
+}
+.roster .name-chip .ic { color: var(--green); }
+.roster .empty { color: var(--muted); }
+@keyframes floatUp { from { transform: translateY(22px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* placeholder de slides aún no construidos */
+.stub { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+.stub .n { font-family: var(--mono); color: var(--blue); font-size: 0.85rem; letter-spacing: 2px; font-weight: 700; }
+.stub h2 { font-family: var(--display); font-size: 2rem; max-width: 700px; color: var(--navy); }
+.stub p { color: var(--muted); }
+
+/* ===========================================================
+   Diapositivas de contenido (mismo look en alumno y profe)
+   =========================================================== */
+.slide {
+  flex: 1; display: flex; flex-direction: column; justify-content: center;
+  width: 100%; max-width: 900px; margin: 0 auto; gap: 22px; text-align: left;
+}
+.slide .kicker { align-self: flex-start; }
+.slide .q {
+  font-family: var(--display); font-weight: 600; font-size: 2.3rem;
+  line-height: 1.15; letter-spacing: -0.01em; color: var(--navy);
+}
+
+/* encuesta: dos tiles grandes que se llenan en vivo */
+.poll-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 4px; }
+.choice {
+  position: relative; overflow: hidden; font: inherit; cursor: default;
+  border: 2px solid var(--line); background: var(--surface); border-radius: 26px;
+  min-height: 260px; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.12s, box-shadow 0.2s, border-color 0.2s;
+}
+.choice.tap { cursor: pointer; }
+.choice.tap:hover { border-color: var(--c); }
+.choice.tap:active { transform: scale(0.98); }
+.choice.mine { border-color: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 20%, transparent); }
+.choice .fill {
+  position: absolute; inset: 0; transform: scaleY(0); transform-origin: bottom;
+  background: var(--cs); transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1); z-index: 0;
+}
+.choice .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--navy); }
+.choice .ic-wrap { color: var(--c); margin-bottom: 2px; }
+.choice .big { font-family: var(--display); font-weight: 700; font-size: 3rem; line-height: 1; color: var(--navy); }
+.choice .pct { font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--c); font-variant-numeric: tabular-nums; }
+.choice .cnt { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+.poll-foot { margin-top: 4px; font-family: var(--display); font-weight: 600; color: var(--muted); }
+.poll-foot .ok { display: inline-flex; align-items: center; gap: 7px; color: var(--green); }
+
+/* logo fijo en la esquina superior del alumno (con safe-area del iPhone) */
+.stu-top {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40; pointer-events: none;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 8px;
+}
+.stu-top img { height: 22px; }
+
+/* inicio: nombres de la gente entrando, flotando hacia arriba (detrás del contenido) */
+.join-float { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.join-chip {
+  position: absolute; bottom: 0; pointer-events: none; opacity: 0;
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+  padding: 9px 16px; box-shadow: var(--shadow);
+  font-family: var(--display); font-weight: 600; color: var(--navy); font-size: 1rem;
+  animation: join-rise linear infinite;
+}
+.join-chip .ic { color: var(--green); }
+@keyframes join-rise {
+  0%   { transform: translateY(18vh) translateX(0); opacity: 0; }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(-115vh) translateX(var(--drift, 0px)); opacity: 0; }
+}
+
+@media (max-width: 620px) {
+  .slide { gap: 18px; }
+  .slide .q { font-size: 1.55rem; }
+  .poll-choices { grid-template-columns: 1fr; gap: 14px; }
+  .choice { min-height: 150px; border-radius: 22px; }
+  .choice .big { font-size: 2.3rem; }
+  .choice .pct { font-size: 1.3rem; }
+}
+@media (max-width: 560px) {
+  .qr-card svg { width: 230px; height: 230px; }
+  .qr-side h1 { font-size: 2rem; }
+  .pres-stage { padding: 20px; }
+}

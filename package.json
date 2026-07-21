@@ -1,0 +1,16 @@
+{
+  "name": "barna-cloudteco",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Clase interactiva de ciberseguridad de Barna — presentación sincronizada laptop↔celular",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "ws": "^8.21.0"
+  }
+}
