@@ -27,11 +27,6 @@
         </div>
 
         ${roleBlock}
-
-        <div class="pill-navy paso5-lesson">
-          ${ctx.icon('eye', { size: 18 })}
-          <span>Siempre mira la <b>barra de dirección</b>.</span>
-        </div>
       </div>`;
   }
 
@@ -60,7 +55,9 @@
 
     // ---------- CSS mínimo (prefijado paso5-) ----------
     css: `
-      .paso5 { max-width: 100%; }
+      /* sin max-width propio: hereda el ancho centrado de .slide (900px, margin auto) */
+      .paso5 { align-items: center; text-align: center; }
+      .paso5 .kicker { align-self: center; }
 
       /* contraste de URL: apiladas, corto y visual */
       .paso5-urls { display: flex; flex-direction: column; align-items: stretch; gap: 8px; max-width: 480px; width: 100%; }
@@ -104,14 +101,6 @@
       .paso5-count { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
       .paso5-num { font-family: var(--display); font-weight: 700; font-size: clamp(3rem, 12vw, 5rem); line-height: 1; color: var(--red); font-variant-numeric: tabular-nums; }
       .paso5-count-txt { font-family: var(--display); font-weight: 700; font-size: clamp(1.2rem, 5vw, 1.9rem); color: var(--navy); }
-
-      /* lección: una frase punchy */
-      .paso5-lesson {
-        align-self: flex-start; max-width: 100%; align-items: center;
-        font-weight: 500; font-size: clamp(0.95rem, 3.6vw, 1.05rem);
-      }
-      .paso5-lesson .ic { flex: none; }
-      .paso5-lesson b { color: #fff; }
 
       @media (max-width: 620px) {
         .paso5-urls, .paso5-msg { max-width: 100%; }

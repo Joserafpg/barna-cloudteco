@@ -1,246 +1,200 @@
-/* Paso 3 (índice 2) — Mi primer hackeo. Un párrafo + imagen animada.
-   El botón "RECLAMAR AHORA" abre un dialog que revive el hackeo paso a paso. */
+/* ===========================================================
+   Paso 3 (índice 2) — "Instagram falso"
+   Demo de phishing en vivo (educativa, autorizada, en el dominio
+   del profe; los datos NO se guardan en disco). El alumno ve un
+   login estilo Instagram; el profe ve las capturas FLOTANDO y
+   subiendo por toda la pantalla.
+   =========================================================== */
 (() => {
   'use strict';
-  const IMG_SRC = '/assets/hackeo.jpg';
-  const VIDEO_SRC = '/assets/hackeo.mp4';
 
-  function visual() {
-    return `
-      <div class="paso3-phone">
-        <div class="paso3-notch"></div>
-        <div class="paso3-screen">
-          <video class="paso3-media paso3-vid" src="${VIDEO_SRC}" playsinline muted loop preload="metadata" style="display:none"></video>
-          <img class="paso3-media paso3-img" src="${IMG_SRC}" alt="" style="display:none" />
-          <div class="paso3-bait">
-            <div class="paso3-steam">STEAM</div>
-            <div class="paso3-glow"></div>
-            <div class="paso3-fifty">$50</div>
-            <div class="paso3-free">GRATIS</div>
-            <button class="paso3-claim" id="paso3-claim" type="button">RECLAMAR AHORA</button>
-            <div class="paso3-shine"></div>
-          </div>
-        </div>
-      </div>`;
+  const SLIDE = 2; // índice de este paso; el overlay del profe se desmonta al salir de él
+  let submitted = false; // estado local del alumno
+
+  // glifo real de Instagram (cámara con degradado) + wordmark
+  const IG_LOGO = `
+    <svg class="paso3-glyph" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="paso3-ig" cx="30%" cy="107%" r="140%">
+          <stop offset="0%" stop-color="#fdf497"/>
+          <stop offset="8%" stop-color="#fdf497"/>
+          <stop offset="45%" stop-color="#fd5949"/>
+          <stop offset="60%" stop-color="#d6249f"/>
+          <stop offset="90%" stop-color="#285aeb"/>
+        </radialGradient>
+      </defs>
+      <rect x="16" y="16" width="480" height="480" rx="122" fill="url(#paso3-ig)"/>
+      <rect x="146" y="146" width="220" height="220" rx="64" fill="none" stroke="#fff" stroke-width="26"/>
+      <circle cx="256" cy="256" r="60" fill="none" stroke="#fff" stroke-width="26"/>
+      <circle cx="352" cy="160" r="18" fill="#fff"/>
+    </svg>`;
+
+  function brand() {
+    return `<div class="paso3-brand">${IG_LOGO}<div class="paso3-word">Instagram</div></div>`;
   }
 
-  // pasos de la reconstrucción del hackeo (dentro del dialog)
-  function hackSteps(ctx) {
-    return [
-      {
-        screen: `<div class="paso3-fake steam">
-          <div class="paso3-fake-logo">STEAM</div>
-          <div class="paso3-fake-field">jose_rd</div>
-          <div class="paso3-fake-field">••••••••••</div>
-          <div class="paso3-fake-btn">Iniciar sesión</div>
-        </div>`,
-        cap: 'Puse mi usuario y contraseña en la página <b>idéntica</b> a Steam.',
-      },
-      {
-        screen: `<div class="paso3-fake steam">
-          <div class="paso3-fake-logo">Steam Guard</div>
-          <div class="paso3-fake-ru">Введите код подтверждения</div>
-          <div class="paso3-fake-code">4&nbsp;8&nbsp;2&nbsp;1&nbsp;3</div>
-          <div class="paso3-fake-btn">Отправить</div>
-        </div>`,
-        cap: 'Me pidió un código… <b>en ruso</b>. Por ignorante, lo puse.',
-      },
-      {
-        screen: `<div class="paso3-fake steam">
-          <div class="paso3-fake-err">Ошибка. Повторите вход.</div>
-          <div class="paso3-fake-ru">Введите код подтверждения</div>
-          <div class="paso3-fake-code">9&nbsp;0&nbsp;5&nbsp;7&nbsp;7</div>
-          <div class="paso3-fake-btn">Отправить</div>
-        </div>`,
-        cap: '"Algo salió mal, entra de nuevo." Llegó <b>otro</b> código. Lo volví a poner.',
-      },
-      {
-        screen: `<div class="paso3-fake danger">
-          <div class="paso3-fake-alert">${ctx.icon('alertTriangle', { size: 44, sw: 1.7 })}</div>
-          <div class="paso3-fake-ru">Ваш пароль был изменён</div>
-          <div class="paso3-fake-sub">Tu contraseña fue cambiada con éxito</div>
-        </div>`,
-        cap: 'Y ya. En <b>segundos</b>, la cuenta dejó de ser mía.',
-      },
-      {
-        reveal: true,
-        screen: `<div class="paso3-reveal">
-          <div class="icon-chip red" style="width:64px;height:64px;border-radius:18px">${ctx.icon('lock', { size: 32 })}</div>
-          <h3>Me robaron en 30 segundos</h3>
-          <p>Esos códigos eran de Steam <b>de verdad</b>. Al dárselos, aprobé el login del ladrón y el cambio de clave.</p>
-          <div class="pill-navy">${ctx.icon('shieldCheck', { size: 18 })} Nunca des un código que te llega. <span class="hl">Nunca.</span></div>
-        </div>`,
-      },
-    ];
-  }
+  // ---- overlay flotante del profe (vive en <body>, sobrevive al re-render) ----
+  let overlay = null, guard = null, ctxRef = null;
+  const seen = new Set();
 
-  function openHackDialog(dlg, ctx) {
-    const steps = hackSteps(ctx);
-    let i = 0;
-    const render = () => {
-      const s = steps[i];
-      const last = i === steps.length - 1;
-      dlg.innerHTML = `
-        <button class="paso3-x" id="paso3-x" type="button" aria-label="Cerrar">${ctx.icon('x', { size: 18 })}</button>
-        <div class="paso3-hd-body ${s.reveal ? 'is-reveal' : ''}">${s.screen}</div>
-        ${s.cap ? `<p class="paso3-cap">${s.cap}</p>` : ''}
-        <div class="paso3-hd-foot">
-          <div class="paso3-dots">${steps.map((_, k) => `<span class="${k === i ? 'on' : ''}"></span>`).join('')}</div>
-          <button class="btn ${last ? '' : 'navy'} paso3-next" id="paso3-next" type="button">${last ? 'Entendido' : 'Siguiente'} ${ctx.icon(last ? 'check' : 'arrowRight', { size: 18 })}</button>
-        </div>`;
-      dlg.querySelector('#paso3-x').onclick = () => dlg.close();
-      dlg.querySelector('#paso3-next').onclick = () => { if (last) dlg.close(); else { i++; render(); } };
-    };
-    render();
-    if (!dlg.open) dlg.showModal();
-    dlg.onclick = (e) => { if (e.target === dlg) dlg.close(); }; // clic fuera cierra
-  }
-
-  function mount(container, ctx, role) {
-    container.innerHTML = `
-      <div class="slide paso3 paso3-${role}">
-        <div class="paso3-cols">
-          <div class="paso3-visual">${visual()}</div>
-          <div class="paso3-text">
-            <div class="kicker">${ctx.icon('alertTriangle', { size: 14 })} Mi primer hackeo</div>
-            <h2 class="q">Así me hackearon <span class="hl">la primera vez</span></h2>
-            <p class="paso3-p">
-              Un TikTok: <b>«Steam regala $50»</b>. Entré, puse mis datos en una web <b>idéntica</b> a
-              la real y di dos códigos que llegaron… <b>en ruso</b>. Minutos después, mi cuenta ya no
-              era mía.
-            </p>
-            <div class="pill-navy">${ctx.icon('lock', { size: 18 })} Con esos códigos, <span class="hl">yo mismo aprobé el robo</span>.</div>
-          </div>
-        </div>
-        <dialog class="paso3-hack" id="paso3-hack"></dialog>
-      </div>`;
-
-    // prioridad: video real > imagen real > ilustración animada
-    const vid = container.querySelector('.paso3-vid');
-    const img = container.querySelector('.paso3-img');
-    const bait = container.querySelector('.paso3-bait');
-    let used = false;
-    if (vid) {
-      vid.addEventListener('loadeddata', () => {
-        if (used) return; used = true;
-        vid.style.display = 'block'; if (img) img.remove(); if (bait) bait.remove();
-        vid.play().catch(() => {});
-      });
-      vid.addEventListener('error', () => vid.remove());
+  function ensureOverlay() {
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'paso3-overlay';
+      document.body.appendChild(overlay);
     }
-    if (img) {
-      img.addEventListener('load', () => {
-        if (used) return; used = true;
-        img.style.display = 'block'; if (bait) bait.remove();
-      });
-      img.addEventListener('error', () => img.remove());
+    if (!guard) {
+      guard = setInterval(() => { if (!ctxRef || ctxRef.S.slide !== SLIDE) teardown(); }, 400);
     }
-
-    // "RECLAMAR AHORA" → revive el hackeo
-    const claim = container.querySelector('#paso3-claim');
-    const dlg = container.querySelector('#paso3-hack');
-    if (claim && dlg) claim.addEventListener('click', () => openHackDialog(dlg, ctx));
+  }
+  function teardown() {
+    if (guard) { clearInterval(guard); guard = null; }
+    if (overlay) { overlay.remove(); overlay = null; }
+    seen.clear();
+  }
+  function spawnCard(ctx, c) {
+    if (!overlay) return;
+    const el = document.createElement('div');
+    el.className = 'paso3-card';
+    const dur = 9 + Math.random() * 5;
+    el.style.left = (6 + Math.random() * 80) + '%';
+    el.style.setProperty('--drift', Math.round((Math.random() - 0.5) * 170) + 'px');
+    el.style.setProperty('--rot', Math.round((Math.random() - 0.5) * 12) + 'deg');
+    el.style.animationDuration = dur.toFixed(1) + 's';
+    el.style.animationDelay = (-Math.random() * dur).toFixed(1) + 's'; // fase distinta → flujo continuo
+    el.innerHTML = `
+      <div class="paso3-card-name">${ctx.icon('user', { size: 15 })}${ctx.escapeHtml(c.name || 'Anónimo')}</div>
+      <div class="paso3-card-cred">
+        <span class="paso3-card-user">${ctx.escapeHtml(c.user || '')}</span>
+        <span class="paso3-card-pass">${ctx.escapeHtml(c.pass || '')}</span>
+      </div>`;
+    overlay.appendChild(el); // queda en loop (no se elimina)
   }
 
   window.BARNA_SLIDES = window.BARNA_SLIDES || {};
-  window.BARNA_SLIDES[2] = {
-    student(container, ctx) { mount(container, ctx, 'stu'); },
-    presenter(container, ctx) { mount(container, ctx, 'pres'); },
+  window.BARNA_SLIDES[SLIDE] = {
+    // ---------- ALUMNO: login falso a pantalla completa ----------
+    student(container, ctx) {
+      if (submitted) return showWaiting(container);
+      container.innerHTML = `
+        <div class="paso3-ig">
+          <div class="paso3-ig-inner">
+            ${brand()}
+            <input class="paso3-in" id="paso3-user" type="text" placeholder="Teléfono, usuario o correo" autocomplete="off" autocapitalize="none" spellcheck="false" />
+            <input class="paso3-in" id="paso3-pass" type="password" placeholder="Contraseña" autocomplete="off" />
+            <button class="paso3-ig-btn" id="paso3-go" disabled>Iniciar sesión</button>
+            <a class="paso3-forgot" href="#" id="paso3-forgot">¿Olvidaste tu contraseña?</a>
+          </div>
+        </div>`;
+      const inner = container.querySelector('.paso3-ig-inner');
+      const userEl = container.querySelector('#paso3-user');
+      const passEl = container.querySelector('#paso3-pass');
+      const btn = container.querySelector('#paso3-go');
+      const sync = () => { btn.disabled = !(userEl.value.trim() && passEl.value.trim()); };
+      userEl.addEventListener('input', sync);
+      passEl.addEventListener('input', sync);
+      container.querySelector('#paso3-forgot').addEventListener('click', (e) => e.preventDefault());
+      const submit = (e) => {
+        if (e) e.preventDefault();
+        const user = userEl.value.trim(); const pass = passEl.value;
+        if (!user || !pass.trim() || submitted) return;
+        submitted = true;
+        ctx.sendWs({ type: 'capture', user, pass });
+        renderWaiting(inner);
+      };
+      btn.addEventListener('click', submit);
+      passEl.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && !btn.disabled) submit(ev); });
+    },
+
+    // ---------- PROFE: capturas flotando por toda la pantalla ----------
+    presenter(container, ctx) {
+      ctxRef = ctx;
+      const n = (ctx.cache.captures || []).length;
+      container.innerHTML = `
+        <div class="slide paso3-pres">
+          <div class="kicker">${ctx.icon('eye', { size: 14 })} En vivo</div>
+          <h2 class="q">Lo que están escribiendo <span class="hl">ahora mismo</span>…</h2>
+          <p class="paso3-hint">${n ? `${n} ${n === 1 ? 'persona ya escribió sus datos' : 'personas ya escribieron sus datos'}` : 'Esperando a que entren sus datos…'}</p>
+        </div>`;
+      ensureOverlay();
+      (ctx.cache.captures || []).forEach((c) => {
+        const key = (c.id || '') + '|' + (c.at || '');
+        if (!seen.has(key)) { seen.add(key); spawnCard(ctx, c); }
+      });
+    },
+
     css: `
-      .paso3 { max-width:100%; }
-      .paso3-cols { display:flex; align-items:center; gap:52px; width:100%; max-width:100%; }
-      .paso3-stu .paso3-cols { flex-direction:column; gap:20px; }
-      .paso3-visual { flex:none; }
-      .paso3-text { flex:1; min-width:0; text-align:left; }
-      .paso3-p { font-size:1.2rem; line-height:1.65; color:var(--ink); margin:14px 0 20px; max-width:540px; }
-      .paso3-p b { color:var(--navy); font-weight:700; }
-      .paso3-stu .paso3-p { font-size:1rem; }
-      .paso3-stu .paso3-text { text-align:center; }
-      .paso3-stu .paso3-p { margin-left:auto; margin-right:auto; }
-      .paso3 .pill-navy { max-width:100%; }
-      .paso3-stu .pill-navy { margin:0 auto; }
-
-      /* marco de celular */
-      .paso3-phone {
-        position:relative; width:250px; height:500px; border-radius:40px; background:#0b1220;
-        padding:11px; box-shadow:var(--shadow-lg); animation:paso3-float 5s ease-in-out infinite;
+      /* ---- ALUMNO: recreación de login Instagram ---- */
+      .paso3-ig {
+        position: fixed; inset: 0; z-index: 45; background: #fff; color: #262626;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 40px 28px calc(env(safe-area-inset-bottom, 0px) + 40px);
+        font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       }
-      .paso3-stu .paso3-phone { width:200px; height:400px; }
-      .paso3-notch { position:absolute; top:11px; left:50%; transform:translateX(-50%); width:120px; height:22px; background:#0b1220; border-radius:0 0 16px 16px; z-index:3; }
-      .paso3-screen { position:relative; width:100%; height:100%; border-radius:30px; overflow:hidden; background:#0b1220; }
-      .paso3-media { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-      .paso3-img { animation:paso3-kb 12s ease-in-out infinite alternate; }
-      @keyframes paso3-float { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-12px) } }
-      @keyframes paso3-kb { from{ transform:scale(1.02) } to{ transform:scale(1.14) } }
+      .paso3-ig-inner { width: 100%; max-width: 350px; display: flex; flex-direction: column; align-items: stretch; gap: 11px; }
+      .paso3-brand { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 26px; }
+      .paso3-glyph { width: 62px; height: 62px; filter: drop-shadow(0 6px 16px rgba(214,36,159,0.25)); }
+      .paso3-word { font-family: 'Grand Hotel', 'Brush Script MT', 'Segoe Script', 'Snell Roundhand', cursive; font-size: 44px; color: #262626; line-height: 1; }
+      /* font-size 16px evita el auto-zoom de iOS al enfocar el campo */
+      .paso3-in { width: 100%; padding: 13px 12px; font-size: 16px; background: #fafafa; border: 1px solid #dbdbdb; border-radius: 6px; color: #262626; outline: none; font-family: inherit; }
+      .paso3-in:focus { border-color: #a8a8a8; background: #fff; }
+      .paso3-in::placeholder { color: #8e8e8e; }
+      .paso3-ig-btn { width: 100%; margin-top: 6px; padding: 13px; border: none; border-radius: 8px; background: #0095f6; color: #fff; font-weight: 700; font-size: 1rem; font-family: inherit; cursor: pointer; transition: opacity 0.15s; }
+      .paso3-ig-btn:disabled { opacity: 0.4; cursor: default; }
+      .paso3-forgot { text-align: center; margin-top: 20px; font-size: 0.82rem; color: #00376b; text-decoration: none; }
+      .paso3-wait { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+      .paso3-spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #dbdbdb; border-top-color: #0095f6; animation: paso3-spin 0.9s linear infinite; }
+      @keyframes paso3-spin { to { transform: rotate(360deg); } }
+      .paso3-wait-txt { color: #8e8e8e; font-size: 0.92rem; }
 
-      /* ilustración animada del scam de Steam */
-      .paso3-bait { position:absolute; inset:0; background:radial-gradient(120% 90% at 50% 22%, #1b2838, #0a141f); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; overflow:hidden; }
-      .paso3-steam { color:#c7d5e0; font-family:var(--display); font-weight:700; letter-spacing:6px; font-size:1rem; margin-bottom:10px; }
-      .paso3-glow { position:absolute; width:230px; height:230px; border-radius:50%; background:radial-gradient(circle, rgba(102,192,244,0.35), transparent 65%); animation:paso3-pulse 2.6s ease-in-out infinite; }
-      .paso3-fifty { position:relative; color:#ffd166; font-family:var(--display); font-weight:700; font-size:4.4rem; line-height:1; text-shadow:0 4px 26px rgba(255,209,102,0.45); }
-      .paso3-free { position:relative; color:#66c0f4; font-family:var(--display); font-weight:700; letter-spacing:9px; font-size:1.15rem; }
-      .paso3-claim { position:relative; margin-top:20px; border:none; background:#66c0f4; color:#0a141f; font-family:var(--display); font-weight:700; font-size:0.8rem; padding:11px 20px; border-radius:999px; cursor:pointer; animation:paso3-pulse2 1.8s ease-in-out infinite; }
-      .paso3-claim:active { transform:scale(0.96); }
-      @keyframes paso3-pulse { 0%,100%{ transform:scale(0.9); opacity:0.65 } 50%{ transform:scale(1.15); opacity:1 } }
-      @keyframes paso3-pulse2 { 0%,100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(102,192,244,0.5) } 50%{ transform:scale(1.05); box-shadow:0 0 0 12px rgba(102,192,244,0) } }
-      .paso3-shine { position:absolute; top:0; left:-60%; width:50%; height:100%; background:linear-gradient(100deg, transparent, rgba(255,255,255,0.16), transparent); animation:paso3-sweep 3.6s ease-in-out infinite; pointer-events:none; }
-      @keyframes paso3-sweep { 0%{ left:-60% } 60%,100%{ left:120% } }
-
-      /* ---- dialog: revivir el hackeo ---- */
-      .paso3-hack {
-        margin:auto; width:min(420px, calc(100vw - 32px)); border:none; border-radius:24px;
-        padding:22px; background:var(--surface); color:var(--ink); box-shadow:var(--shadow-lg);
-        position:relative; overflow:visible;
+      /* ---- PROFE: overlay flotante ---- */
+      /* El texto se queda donde estaba, pero con fondo propio y por encima de las
+         capturas. Ojo: #app crea contexto de apilamiento (z-index 1), así que un
+         z-index alto en el texto NO gana contra un overlay colgado de <body>;
+         por eso el overlay va por debajo de #app (z-index 0) y las tarjetas
+         pasan por detrás de todo el contenido. */
+      .paso3-pres { position: relative; z-index: 2; }
+      .paso3-pres > * { position: relative; }
+      .paso3-pres::before {
+        content: ''; position: absolute; pointer-events: none;
+        left: -22px; right: -22px; top: -16px; bottom: -14px;
+        background: var(--bg); border-radius: 20px;
+        box-shadow: 0 0 16px 8px var(--bg);
       }
-      .paso3-hack::backdrop { background:rgba(11,18,32,0.55); backdrop-filter:blur(3px); }
-      .paso3-x { position:absolute; top:12px; right:12px; width:32px; height:32px; border-radius:50%; border:none; background:var(--bg); color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
-      .paso3-x:hover { color:var(--red); }
-      .paso3-hd-body { display:flex; flex-direction:column; align-items:center; }
-
-      /* pantallas falsas dentro del dialog */
-      .paso3-fake { width:100%; border-radius:16px; padding:22px 18px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; }
-      .paso3-fake.steam { background:radial-gradient(120% 100% at 50% 0%, #1b2838, #0a141f); color:#c7d5e0; }
-      .paso3-fake.danger { background:#2a0e12; color:#ffd7db; }
-      .paso3-fake-logo { font-family:var(--display); font-weight:700; letter-spacing:4px; color:#66c0f4; font-size:1.1rem; margin-bottom:4px; }
-      .paso3-fake-field { width:100%; max-width:240px; background:rgba(255,255,255,0.08); border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:0.9rem; color:#e6eefb; text-align:left; }
-      .paso3-fake-ru { font-family:var(--mono); font-size:0.9rem; color:#9fb3cf; }
-      .paso3-fake-code { font-family:var(--mono); font-weight:700; font-size:1.8rem; letter-spacing:2px; color:#fff; }
-      .paso3-fake-err { color:#ff7a85; font-family:var(--mono); font-size:0.85rem; }
-      .paso3-fake-btn { margin-top:4px; background:#66c0f4; color:#0a141f; font-family:var(--display); font-weight:700; font-size:0.82rem; padding:9px 22px; border-radius:8px; }
-      .paso3-fake-alert { color:#ff5566; }
-      .paso3-fake-sub { font-size:0.82rem; color:#e9b7bd; }
-      .paso3-cap { text-align:center; color:var(--ink); font-size:0.98rem; line-height:1.5; margin:14px 4px 4px; }
-      .paso3-cap b { color:var(--navy); font-weight:700; }
-
-      /* pantalla de reveal dentro del dialog */
-      .paso3-reveal { display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; padding:6px 4px; }
-      .paso3-reveal h3 { font-family:var(--display); font-weight:700; font-size:1.3rem; color:var(--navy); }
-      .paso3-reveal p { color:var(--muted); font-size:0.95rem; line-height:1.55; }
-      .paso3-reveal p b { color:var(--navy); }
-
-      .paso3-hd-foot { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; }
-      .paso3-dots { display:flex; gap:6px; }
-      .paso3-dots span { width:7px; height:7px; border-radius:50%; background:var(--line-2); }
-      .paso3-dots span.on { background:var(--blue); }
-      .paso3-next { padding:11px 20px; font-size:0.9rem; }
-
-      @media (max-width:620px){
-        .paso3-cols, .paso3-stu .paso3-cols { gap:14px; }
-        .paso3-phone, .paso3-stu .paso3-phone { width:150px; height:300px; padding:8px; border-radius:30px; }
-        .paso3-notch { width:80px; height:15px; top:8px; }
-        .paso3-screen { border-radius:22px; }
-        .paso3-steam { font-size:0.78rem; letter-spacing:4px; margin-bottom:6px; }
-        .paso3-glow { width:150px; height:150px; }
-        .paso3-fifty { font-size:2.9rem; }
-        .paso3-free { font-size:0.82rem; letter-spacing:5px; }
-        .paso3-claim { font-size:0.66rem; padding:8px 14px; margin-top:14px; }
-        .paso3-p, .paso3-stu .paso3-p { font-size:0.95rem; line-height:1.55; margin:10px 0 14px; }
-        .paso3-stu .pill-navy { font-size:0.86rem; padding:10px 14px; }
+      .paso3-pres .paso3-hint { color: var(--muted); font-family: var(--display); font-weight: 600; font-size: 1.15rem; margin-top: 6px; }
+      .paso3-overlay { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+      .paso3-card {
+        position: absolute; bottom: 0; pointer-events: none; opacity: 0;
+        background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+        box-shadow: var(--shadow); padding: 12px 16px; min-width: 190px; max-width: 280px;
+        animation: paso3-rise linear infinite;
       }
-      @media (max-width:400px){
-        .paso3-phone, .paso3-stu .paso3-phone { width:138px; height:276px; }
-        .paso3-fifty { font-size:2.6rem; }
+      @keyframes paso3-rise {
+        0%   { transform: translateY(22vh) translateX(0) rotate(var(--rot,0deg)); opacity: 0; }
+        9%   { opacity: 1; }
+        88%  { opacity: 1; }
+        100% { transform: translateY(-118vh) translateX(var(--drift,0px)) rotate(calc(var(--rot,0deg) * -1)); opacity: 0; }
+      }
+      .paso3-card-name { display: inline-flex; align-items: center; gap: 6px; font-family: var(--display); font-weight: 700; font-size: 0.98rem; color: var(--navy); }
+      .paso3-card-name .ic { color: var(--blue); }
+      .paso3-card-cred { margin-top: 5px; font-family: var(--mono); font-size: 0.88rem; display: flex; gap: 8px; flex-wrap: wrap; }
+      .paso3-card-user { color: var(--navy); font-weight: 700; overflow-wrap: anywhere; }
+      .paso3-card-pass { color: var(--red); font-weight: 700; overflow-wrap: anywhere; }
+
+      @media (max-width: 620px) {
+        .paso3-ig { padding: 32px 22px calc(env(safe-area-inset-bottom, 0px) + 32px); }
+        .paso3-glyph { width: 56px; height: 56px; }
+        .paso3-word { font-size: 40px; }
+        .paso3-brand { margin-bottom: 22px; }
       }
     `,
   };
+
+  // -------- helpers del alumno --------
+  function renderWaiting(inner) {
+    inner.innerHTML = `${brand()}<div class="paso3-wait"><div class="paso3-spinner"></div><div class="paso3-wait-txt">Iniciando sesión…</div></div>`;
+  }
+  function showWaiting(container) {
+    container.innerHTML = `<div class="paso3-ig"><div class="paso3-ig-inner">${brand()}<div class="paso3-wait"><div class="paso3-spinner"></div><div class="paso3-wait-txt">Iniciando sesión…</div></div></div></div>`;
+  }
 })();

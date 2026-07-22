@@ -53,8 +53,8 @@
   const SLIDES = [
     { t: 'Ingreso' },                    // 0  · Paso 1
     { t: '¿Te han hackeado?' },          // 1  · Paso 2
-    { t: 'Mi primer hackeo' },           // 2  · Paso 3
-    { t: 'Instagram' },                  // 3  · Paso 4
+    { t: 'Instagram' },                  // 2  · Paso 3
+    { t: 'Mi primer hackeo' },           // 3  · Paso 4
     { t: 'El reveal' },                  // 4  · Paso 5
     { t: 'Valida la URL' },              // 5  · Paso 6
     { t: '¿Caes o no caes?' },           // 6  · Paso 7
